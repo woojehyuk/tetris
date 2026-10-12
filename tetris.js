@@ -138,21 +138,67 @@ function rotate() {
   // 모든 위치에서 막히면 회전하지 않음
 }
 
+// 키보드와 터치 버튼이 함께 쓰는 동작들
+const actions = {
+  left:     () => { if (move(-1, 0)) sfx.move(); },
+  right:    () => { if (move(1, 0)) sfx.move(); },
+  down:     () => { drop(); dropTimer = 0; },
+  rotate:   () => rotate(),
+  hardDrop: () => { hardDrop(); dropTimer = 0; },
+};
+
+function doAction(name) {
+  if (gameOver) return;
+  actions[name]();
+  draw();
+}
+
+const KEY_ACTIONS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down', ArrowUp: 'rotate', ' ': 'hardDrop' };
+
 document.addEventListener('keydown', (e) => {
   initAudio(); // 브라우저 정책상 사용자 입력이 있어야 소리를 켤 수 있음
   if (e.key === 'm' || e.key === 'M') { muted = !muted; return; }
-  if (gameOver) {
-    if (e.key === 'Enter') restart();
-    return; // 게임 오버 중에는 다른 키 무시
-  }
-  if (e.key === 'ArrowLeft') { if (move(-1, 0)) sfx.move(); }
-  else if (e.key === 'ArrowRight') { if (move(1, 0)) sfx.move(); }
-  else if (e.key === 'ArrowDown') { drop(); dropTimer = 0; }
-  else if (e.key === 'ArrowUp') rotate();
-  else if (e.key === ' ') { hardDrop(); dropTimer = 0; }
-  else return;
+  if (gameOver && e.key === 'Enter') { restart(); return; }
+  const name = KEY_ACTIONS[e.key];
+  if (!name) return;
   e.preventDefault(); // 방향키·스페이스로 페이지가 스크롤되는 것 방지
-  draw();
+  doAction(name);
+});
+
+// ===== 추가 기능 6: 모바일 터치 버튼 =====
+// 이동·내리기 버튼은 누르고 있으면 반복 (키보드를 꾹 누르는 것처럼)
+const REPEATABLE = ['left', 'right', 'down'];
+
+document.querySelectorAll('#controls button').forEach((btn) => {
+  const name = btn.dataset.action;
+  let delayTimer = null;
+  let repeatTimer = null;
+
+  const stop = () => {
+    clearTimeout(delayTimer);
+    clearInterval(repeatTimer);
+  };
+
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    initAudio();
+    doAction(name);
+    if (REPEATABLE.includes(name)) {
+      // 0.2초 뒤부터 0.06초마다 반복
+      delayTimer = setTimeout(() => {
+        repeatTimer = setInterval(() => doAction(name), 60);
+      }, 200);
+    }
+  });
+  btn.addEventListener('pointerup', stop);
+  btn.addEventListener('pointerleave', stop);
+  btn.addEventListener('pointercancel', stop);
+});
+
+// 게임 오버 화면을 탭하면 다시 시작
+canvas.addEventListener('pointerdown', () => {
+  initAudio();
+  if (gameOver) restart();
 });
 
 // ===== 6단계: 블록 고정 + 줄 삭제 =====
@@ -334,7 +380,7 @@ function drawGameOver() {
   ctx.font = 'bold 32px sans-serif';
   ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
   ctx.font = '16px sans-serif';
-  ctx.fillText('Enter 키로 다시 시작', canvas.width / 2, canvas.height / 2 + 36);
+  ctx.fillText('Enter 또는 화면 탭으로 다시 시작',canvas.width / 2, canvas.height / 2 + 36);
 }
 
 function restart() {

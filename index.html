@@ -2,34 +2,74 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <!-- 모바일에서 화면 폭에 맞추고, 확대/축소로 화면이 흔들리지 않게 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Tetris</title>
   <style>
-    body { background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    canvas { border: 2px solid #555; }
-    #info { color: #fff; font-family: sans-serif; font-size: 20px; margin-left: 20px; }
+    * { box-sizing: border-box; }
+    body {
+      background: #111; color: #fff; font-family: sans-serif; margin: 0;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      touch-action: manipulation; /* 두 번 탭 확대 방지 */
+      user-select: none; -webkit-user-select: none;
+    }
+    #game { display: flex; align-items: flex-start; }
+    canvas { border: 2px solid #555; display: block; }
+    /* 내부 해상도(300x600)는 그대로 두고, 화면에 보이는 크기만 줄임 */
+    #board { height: min(600px, 65vh); width: auto; }
+    #info { font-size: 20px; margin-left: 20px; }
     #info p { margin: 0 0 16px; }
     #info .label { color: #aaa; font-size: 14px; display: block; }
+    #next { width: 120px; height: 120px; }
     #keys { color: #aaa; font-size: 13px; line-height: 1.7; }
+
+    /* 터치 버튼 */
+    #controls { display: none; gap: 8px; margin-top: 12px; width: 100%; max-width: 420px; padding: 0 12px; }
+    #controls button {
+      flex: 1; height: 64px; font-size: 26px; color: #fff;
+      background: #2a2a2a; border: 1px solid #555; border-radius: 12px;
+      touch-action: none;
+    }
+    #controls button:active { background: #444; }
+
+    /* 터치 기기(손가락 입력)에서만: 버튼 표시, 패널을 작게 */
+    @media (pointer: coarse) {
+      #controls { display: flex; }
+      #keys { display: none; }
+      #info { font-size: 16px; margin-left: 10px; }
+      #info p { margin-bottom: 10px; }
+      #next { width: 72px; height: 72px; }
+      #volume { width: 72px; }
+    }
   </style>
 </head>
 <body>
-  <canvas id="board"></canvas>
-  <div id="info">
-    <p><span class="label">NEXT</span><canvas id="next"></canvas></p>
-    <p><span class="label">점수</span><span id="score">0</span></p>
-    <p><span class="label">레벨</span><span id="level">1</span></p>
-    <p><span class="label">줄</span><span id="lines">0</span></p>
-    <p>
-      <span class="label">볼륨 <span id="volume-label">70</span></span>
-      <input type="range" id="volume" min="0" max="100" value="70">
-    </p>
-    <div id="keys">
-      ← → 이동<br>
-      ↑ 회전<br>
-      ↓ 한 칸 내리기<br>
-      Space 하드 드롭<br>
-      M 소리 켜기/끄기
+  <div id="game">
+    <canvas id="board"></canvas>
+    <div id="info">
+      <p><span class="label">NEXT</span><canvas id="next"></canvas></p>
+      <p><span class="label">점수</span><span id="score">0</span></p>
+      <p><span class="label">레벨</span><span id="level">1</span></p>
+      <p><span class="label">줄</span><span id="lines">0</span></p>
+      <p>
+        <span class="label">볼륨 <span id="volume-label">70</span></span>
+        <input type="range" id="volume" min="0" max="100" value="70">
+      </p>
+      <div id="keys">
+        ← → 이동<br>
+        ↑ 회전<br>
+        ↓ 한 칸 내리기<br>
+        Space 하드 드롭<br>
+        M 소리 켜기/끄기
+      </div>
     </div>
+  </div>
+  <div id="controls">
+    <button data-action="left">◀</button>
+    <button data-action="rotate">↻</button>
+    <button data-action="right">▶</button>
+    <button data-action="down">▼</button>
+    <button data-action="hardDrop">⤓</button>
   </div>
   <script src="tetris.js"></script>
 </body>
