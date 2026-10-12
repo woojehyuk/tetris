@@ -282,6 +282,7 @@ function spawnPiece() {
   if (collides(piece, 0, 0)) {  // 나오자마자 겹치면 게임 오버
     gameOver = true;
     sfx.gameOver();
+    checkBestScore();
   }
 }
 
@@ -380,10 +381,45 @@ function drawGameOver() {
   ctx.font = 'bold 32px sans-serif';
   ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
   ctx.font = '16px sans-serif';
-  ctx.fillText('Enter 또는 화면 탭으로 다시 시작',canvas.width / 2, canvas.height / 2 + 36);
+  ctx.fillText('Enter 또는 화면 탭으로 다시 시작', canvas.width / 2, canvas.height / 2 + 36);
+  if (isNewBest) {
+    ctx.fillStyle = '#f0f000';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.fillText(`🏆 최고 기록! ${bestScore}점`, canvas.width / 2, canvas.height / 2 - 50);
+  }
+}
+
+// ===== 추가 기능 7: 최고 점수 저장 (localStorage) =====
+// 브라우저에 저장되므로 창을 닫아도 남음 (기기·브라우저마다 따로 저장됨)
+const BEST_KEY = 'tetris-best-score';
+const bestEl = document.getElementById('best');
+let isNewBest = false;
+
+function loadBestScore() {
+  try {
+    return Number(localStorage.getItem(BEST_KEY)) || 0;
+  } catch {
+    return 0; // 저장소를 쓸 수 없는 환경(시크릿 모드 등)에서는 0점부터
+  }
+}
+
+let bestScore = loadBestScore();
+bestEl.textContent = bestScore;
+
+function checkBestScore() {
+  if (score <= bestScore) return;
+  bestScore = score;
+  isNewBest = true;
+  bestEl.textContent = bestScore;
+  try {
+    localStorage.setItem(BEST_KEY, bestScore);
+  } catch {
+    // 저장 실패해도 이번 접속 동안은 기록 유지
+  }
 }
 
 function restart() {
+  isNewBest = false;
   board = createBoard();
   score = 0;
   lines = 0;
