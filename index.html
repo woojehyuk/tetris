@@ -23,6 +23,30 @@
     #next { width: 120px; height: 120px; }
     #keys { color: #aaa; font-size: 13px; line-height: 1.7; }
 
+    /* 시작 화면 */
+    #board-wrap { position: relative; }
+    #menu {
+      position: absolute; inset: 2px; background: rgba(0, 0, 0, 0.85);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px;
+    }
+    #menu[hidden] { display: none; }
+    #menu h1 { margin: 0 0 8px; font-size: 34px; letter-spacing: 4px; }
+    #menu .hint { color: #aaa; margin: 0 0 16px; font-size: 14px; }
+    #players { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 240px; }
+    .player {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      padding: 12px 4px; border-radius: 12px; border: 2px solid #555;
+      background: #222; color: #fff; font-size: 18px; cursor: pointer;
+    }
+    .player .best { font-size: 12px; color: #f0d000; }
+    .player.selected { border-color: #00f0f0; background: #003c3c; }
+    #start {
+      margin-top: 20px; width: 100%; max-width: 240px; height: 52px;
+      font-size: 18px; font-weight: bold; border: none; border-radius: 12px;
+      background: #00c060; color: #fff; cursor: pointer;
+    }
+    #start:disabled { background: #444; color: #999; cursor: default; }
+
     /* 터치 버튼 */
     #controls { display: none; gap: 8px; margin-top: 12px; width: 100%; max-width: 420px; padding: 0 12px; }
     #controls button {
@@ -45,11 +69,20 @@
 </head>
 <body>
   <div id="game">
-    <canvas id="board"></canvas>
+    <div id="board-wrap">
+      <canvas id="board"></canvas>
+      <!-- 시작 화면: 보드 위에 겹쳐서 표시 -->
+      <div id="menu">
+        <h1>TETRIS</h1>
+        <p class="hint">선수를 고르세요</p>
+        <div id="players"></div>
+        <button id="start" disabled>선수를 고르세요</button>
+      </div>
+    </div>
     <div id="info">
       <p><span class="label">NEXT</span><canvas id="next"></canvas></p>
       <p><span class="label">점수</span><span id="score">0</span></p>
-      <p><span class="label">최고 점수</span><span id="best">0</span></p>
+      <p><span class="label" id="best-label">최고 점수</span><span id="best">0</span></p>
       <p><span class="label">레벨</span><span id="level">1</span></p>
       <p><span class="label">줄</span><span id="lines">0</span></p>
       <p>

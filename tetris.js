@@ -148,7 +148,7 @@ const actions = {
 };
 
 function doAction(name) {
-  if (gameOver) return;
+  if (gameOver || inMenu) return;
   actions[name]();
   draw();
 }
@@ -158,7 +158,11 @@ const KEY_ACTIONS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down',
 document.addEventListener('keydown', (e) => {
   initAudio(); // 브라우저 정책상 사용자 입력이 있어야 소리를 켤 수 있음
   if (e.key === 'm' || e.key === 'M') { muted = !muted; return; }
-  if (gameOver && e.key === 'Enter') { restart(); return; }
+  if (e.key === 'Enter') {
+    if (gameOver) showMenu();
+    else if (inMenu && currentPlayer) startGame();
+    return;
+  }
   const name = KEY_ACTIONS[e.key];
   if (!name) return;
   e.preventDefault(); // 방향키·스페이스로 페이지가 스크롤되는 것 방지
@@ -195,10 +199,10 @@ document.querySelectorAll('#controls button').forEach((btn) => {
   btn.addEventListener('pointercancel', stop);
 });
 
-// 게임 오버 화면을 탭하면 다시 시작
+// 게임 오버 화면을 탭하면 선수 선택 화면으로
 canvas.addEventListener('pointerdown', () => {
   initAudio();
-  if (gameOver) restart();
+  if (gameOver) showMenu();
 });
 
 // ===== 6단계: 블록 고정 + 줄 삭제 =====
@@ -381,42 +385,95 @@ function drawGameOver() {
   ctx.font = 'bold 32px sans-serif';
   ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2);
   ctx.font = '16px sans-serif';
-  ctx.fillText('Enter 또는 화면 탭으로 다시 시작', canvas.width / 2, canvas.height / 2 + 36);
+  ctx.fillText('Enter 또는 화면 탭으로 계속', canvas.width / 2, canvas.height / 2 + 36);
+  ctx.fillText(`${currentPlayer} ${score}점`, canvas.width / 2, canvas.height / 2 - 40);
   if (isNewBest) {
     ctx.fillStyle = '#f0f000';
     ctx.font = 'bold 22px sans-serif';
-    ctx.fillText(`🏆 최고 기록! ${bestScore}점`, canvas.width / 2, canvas.height / 2 - 50);
+    ctx.fillText(`🏆 ${currentPlayer} 최고 기록!`, canvas.width / 2, canvas.height / 2 - 70);
   }
 }
 
-// ===== 추가 기능 7: 최고 점수 저장 (localStorage) =====
+// ===== 추가 기능 7: 선수별 최고 점수 저장 (localStorage) =====
 // 브라우저에 저장되므로 창을 닫아도 남음 (기기·브라우저마다 따로 저장됨)
-const BEST_KEY = 'tetris-best-score';
+const PLAYERS = ['홍지', '횩이', '도순', '똥겸'];
+const BEST_KEY = 'tetris-best-scores'; // { 홍지: 1200, 횩이: 800, ... } 형태로 저장
 const bestEl = document.getElementById('best');
+const bestLabelEl = document.getElementById('best-label');
 let isNewBest = false;
 
-function loadBestScore() {
+function loadBestScores() {
   try {
-    return Number(localStorage.getItem(BEST_KEY)) || 0;
+    return JSON.parse(localStorage.getItem(BEST_KEY)) || {};
   } catch {
-    return 0; // 저장소를 쓸 수 없는 환경(시크릿 모드 등)에서는 0점부터
+    return {}; // 저장소를 쓸 수 없는 환경(시크릿 모드 등)에서는 0점부터
   }
 }
 
-let bestScore = loadBestScore();
-bestEl.textContent = bestScore;
+let bestScores = loadBestScores();
+
+function getBest(name) {
+  return bestScores[name] || 0;
+}
 
 function checkBestScore() {
-  if (score <= bestScore) return;
-  bestScore = score;
+  if (score <= getBest(currentPlayer)) return;
+  bestScores[currentPlayer] = score;
   isNewBest = true;
-  bestEl.textContent = bestScore;
+  bestEl.textContent = score;
   try {
-    localStorage.setItem(BEST_KEY, bestScore);
+    localStorage.setItem(BEST_KEY, JSON.stringify(bestScores));
   } catch {
     // 저장 실패해도 이번 접속 동안은 기록 유지
   }
 }
+
+// ===== 추가 기능 8: 시작 화면 + 선수 선택 =====
+const menuEl = document.getElementById('menu');
+const playerListEl = document.getElementById('players');
+const startBtn = document.getElementById('start');
+let inMenu = true;
+let currentPlayer = null;
+
+// 선수 버튼 4개를 만들고, 각 선수의 최고 점수를 함께 표시
+function renderPlayers() {
+  playerListEl.innerHTML = '';
+  PLAYERS.forEach((name) => {
+    const btn = document.createElement('button');
+    btn.className = 'player' + (name === currentPlayer ? ' selected' : '');
+    btn.innerHTML = `<span class="name">${name}</span><span class="best">🏆 ${getBest(name)}</span>`;
+    btn.addEventListener('click', () => {
+      initAudio();
+      currentPlayer = name;
+      sfx.move();
+      renderPlayers();
+    });
+    playerListEl.appendChild(btn);
+  });
+  startBtn.disabled = !currentPlayer;
+  startBtn.textContent = currentPlayer ? `${currentPlayer} 게임 시작` : '선수를 고르세요';
+}
+
+function showMenu() {
+  gameOver = false;
+  inMenu = true;
+  renderPlayers();
+  menuEl.hidden = false;
+}
+
+function startGame() {
+  inMenu = false;
+  menuEl.hidden = true;
+  document.activeElement.blur(); // 버튼에 포커스가 남아 Space/Enter가 버튼을 누르지 않게
+  bestLabelEl.textContent = `최고 점수 (${currentPlayer})`;
+  bestEl.textContent = getBest(currentPlayer);
+  restart();
+}
+
+startBtn.addEventListener('click', () => {
+  initAudio();
+  if (currentPlayer) startGame();
+});
 
 function restart() {
   isNewBest = false;
@@ -440,7 +497,7 @@ function gameLoop(time) {
   const delta = time - lastTime; // 지난 프레임부터 흐른 시간(ms)
   lastTime = time;
 
-  if (!gameOver) {
+  if (!gameOver && !inMenu) {
     dropTimer += delta;
     if (dropTimer >= getDropInterval()) {
       drop();
@@ -454,4 +511,5 @@ function gameLoop(time) {
 }
 
 drawNext();
+showMenu();
 requestAnimationFrame(gameLoop);
