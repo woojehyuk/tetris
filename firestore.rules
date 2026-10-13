@@ -4,7 +4,7 @@ service cloud.firestore {
     // 선수 4명의 최고 점수만 저장 가능
     match /scores/{player} {
       function isPlayer() {
-        return player in ['홍지', '횩이', '도순', '똥겸'];
+        return player in ['홍지', '혁이', '도순', '겸이'];
       }
       function validScore() {
         let d = request.resource.data;

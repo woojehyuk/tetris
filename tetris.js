@@ -396,8 +396,9 @@ function drawGameOver() {
 
 // ===== 추가 기능 7: 선수별 최고 점수 저장 (localStorage) =====
 // 브라우저에 저장되므로 창을 닫아도 남음 (기기·브라우저마다 따로 저장됨)
-const PLAYERS = ['홍지', '횩이', '도순', '똥겸'];
-const BEST_KEY = 'tetris-best-scores'; // { 홍지: 1200, 횩이: 800, ... } 형태로 저장
+const PLAYERS = ['홍지', '혁이', '도순', '겸이'];
+const BEST_KEY = 'tetris-best-scores'; // { 홍지: 1200, 혁이: 800, ... } 형태로 저장
+const RENAMED = { 횩이: '혁이', 똥겸: '겸이' }; // 예전 이름 → 새 이름 (이 기기 기록 옮기기용)
 const bestEl = document.getElementById('best');
 const bestLabelEl = document.getElementById('best-label');
 let isNewBest = false;
@@ -411,6 +412,13 @@ function loadBestScores() {
 }
 
 let bestScores = loadBestScores();
+
+// 이름이 바뀐 선수의 예전 기록을 새 이름으로 옮김
+for (const [oldName, newName] of Object.entries(RENAMED)) {
+  if (bestScores[oldName] === undefined) continue;
+  bestScores[newName] = Math.max(bestScores[newName] || 0, bestScores[oldName]);
+  delete bestScores[oldName];
+}
 
 function getBest(name) {
   return bestScores[name] || 0;
