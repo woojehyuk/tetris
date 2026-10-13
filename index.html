@@ -46,6 +46,10 @@
       background: #00c060; color: #fff; cursor: pointer;
     }
     #start:disabled { background: #444; color: #999; cursor: default; }
+    #ranking { margin-top: 16px; width: 100%; max-width: 240px; font-size: 14px; }
+    #ranking .title { color: #f0d000; font-weight: bold; margin-bottom: 6px; text-align: center; }
+    #ranking .title small { color: #888; font-weight: normal; }
+    #ranking .row { display: flex; justify-content: space-between; padding: 3px 8px; border-bottom: 1px solid #333; }
 
     /* 터치 버튼 */
     #controls { display: none; gap: 8px; margin-top: 12px; width: 100%; max-width: 420px; padding: 0 12px; }
@@ -77,6 +81,7 @@
         <p class="hint">선수를 고르세요</p>
         <div id="players"></div>
         <button id="start" disabled>선수를 고르세요</button>
+        <div id="ranking"></div>
       </div>
     </div>
     <div id="info">
@@ -105,6 +110,7 @@
     <button data-action="down">▼</button>
     <button data-action="hardDrop">⤓</button>
   </div>
-  <script src="tetris.js"></script>
+  <script src="tetris.js?v=9"></script>
+  <script type="module" src="ranking.js?v=9"></script>
 </body>
 </html>

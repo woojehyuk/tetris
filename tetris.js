@@ -421,12 +421,37 @@ function checkBestScore() {
   bestScores[currentPlayer] = score;
   isNewBest = true;
   bestEl.textContent = score;
+  saveLocalScores();
+  window.submitScore?.(currentPlayer, score); // 가족 랭킹에도 올림 (ranking.js)
+}
+
+function saveLocalScores() {
   try {
     localStorage.setItem(BEST_KEY, JSON.stringify(bestScores));
   } catch {
     // 저장 실패해도 이번 접속 동안은 기록 유지
   }
 }
+
+// 가족 랭킹 기록이 도착하면: 이 기기 기록과 합쳐서 더 높은 쪽을 사용
+let rankingReady = false;
+window.onRemoteScores = (remote) => {
+  rankingReady = true;
+  PLAYERS.forEach((name) => {
+    const local = getBest(name);
+    const shared = remote[name] || 0;
+    if (shared > local) bestScores[name] = shared;
+    // 랭킹 기능 전에 이 기기에서 세운 기록이 더 높으면 공용 저장소로 올림
+    else if (local > shared) window.submitScore?.(name, local);
+  });
+  saveLocalScores();
+  if (inMenu) renderPlayers();
+  if (currentPlayer && !inMenu) bestEl.textContent = getBest(currentPlayer);
+};
+window.onRankingError = () => {
+  rankingReady = false;
+  if (inMenu) renderPlayers();
+};
 
 // ===== 추가 기능 8: 시작 화면 + 선수 선택 =====
 const menuEl = document.getElementById('menu');
@@ -450,8 +475,21 @@ function renderPlayers() {
     });
     playerListEl.appendChild(btn);
   });
+  renderRanking();
   startBtn.disabled = !currentPlayer;
   startBtn.textContent = currentPlayer ? `${currentPlayer} 게임 시작` : '선수를 고르세요';
+}
+
+// 점수 높은 순으로 가족 랭킹 표시
+const rankingEl = document.getElementById('ranking');
+function renderRanking() {
+  const sorted = [...PLAYERS].sort((a, b) => getBest(b) - getBest(a));
+  const medals = ['🥇', '🥈', '🥉', '4위'];
+  rankingEl.innerHTML =
+    `<div class="title">🏆 가족 랭킹${rankingReady ? '' : ' <small>(이 기기 기록)</small>'}</div>` +
+    sorted.map((name, i) =>
+      `<div class="row"><span>${medals[i]} ${name}</span><span>${getBest(name).toLocaleString()}</span></div>`
+    ).join('');
 }
 
 function showMenu() {
