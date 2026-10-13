@@ -4,7 +4,11 @@
   <meta charset="UTF-8">
   <!-- 모바일에서 화면 폭에 맞추고, 확대/축소로 화면이 흔들리지 않게 -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Tetris</title>
+  <title>꽃순이네 테트리스</title>
+  <!-- 제목용 동글동글한 한글 글꼴 (불러오지 못하면 기본 글꼴로 표시) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -13,6 +17,15 @@
       touch-action: manipulation; /* 두 번 탭 확대 방지 */
       user-select: none; -webkit-user-select: none;
     }
+    /* 상단 메인 제목 */
+    #title {
+      margin: 0 0 14px; padding: 0 12px; text-align: center;
+      font-family: 'Jua', sans-serif; font-weight: normal;
+      font-size: clamp(26px, 8vw, 44px); letter-spacing: 1px; line-height: 1.2;
+      background: linear-gradient(90deg, #ff8fc7, #ffd36e, #8fe3ff);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    #title .flower { color: initial; -webkit-text-fill-color: initial; }
     #game { display: flex; align-items: flex-start; }
     canvas { border: 2px solid #555; display: block; }
     /* 내부 해상도(300x600)는 그대로 두고, 화면에 보이는 크기만 줄임 */
@@ -77,6 +90,7 @@
   </style>
 </head>
 <body>
+  <h1 id="title"><span class="flower">🌸</span> 꽃순이네 테트리스 <span class="flower">🌸</span></h1>
   <div id="game">
     <div id="board-wrap">
       <canvas id="board"></canvas>
@@ -117,7 +131,7 @@
     <button data-action="down">▼</button>
     <button data-action="hardDrop">⤓</button>
   </div>
-  <script src="tetris.js?v=13"></script>
-  <script type="module" src="ranking.js?v=13"></script>
+  <script src="tetris.js?v=14"></script>
+  <script type="module" src="ranking.js?v=14"></script>
 </body>
 </html>
