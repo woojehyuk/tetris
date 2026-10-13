@@ -148,7 +148,7 @@ const actions = {
 };
 
 function doAction(name) {
-  if (gameOver || inMenu) return;
+  if (gameOver || inMenu || paused) return;
   actions[name]();
   draw();
 }
@@ -158,6 +158,7 @@ const KEY_ACTIONS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down',
 document.addEventListener('keydown', (e) => {
   initAudio(); // 브라우저 정책상 사용자 입력이 있어야 소리를 켤 수 있음
   if (e.key === 'm' || e.key === 'M') { muted = !muted; return; }
+  if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { togglePause(); return; }
   if (e.key === 'Enter') {
     if (gameOver) showMenu();
     else if (inMenu && currentPlayer) startGame();
@@ -199,11 +200,41 @@ document.querySelectorAll('#controls button').forEach((btn) => {
   btn.addEventListener('pointercancel', stop);
 });
 
-// 게임 오버 화면을 탭하면 선수 선택 화면으로
+// 게임 오버 화면을 탭하면 선수 선택 화면으로, 일시정지 화면을 탭하면 계속하기
 canvas.addEventListener('pointerdown', () => {
   initAudio();
   if (gameOver) showMenu();
+  else if (paused) togglePause();
 });
+
+// ===== 추가 기능 10: 일시정지 =====
+let paused = false;
+const pauseBtn = document.getElementById('pause');
+
+function togglePause() {
+  if (gameOver || inMenu) return; // 게임 중일 때만
+  paused = !paused;
+  pauseBtn.textContent = paused ? '▶ 계속' : '⏸ 일시정지';
+  pauseBtn.blur(); // 포커스가 남아 Space가 버튼을 누르지 않게
+}
+
+pauseBtn.addEventListener('click', togglePause);
+
+// 다른 앱으로 가거나 화면이 꺼지면 자동으로 일시정지
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !paused) togglePause();
+});
+
+function drawPaused() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#fff';
+  ctx.textAlign = 'center';
+  ctx.font = 'bold 32px sans-serif';
+  ctx.fillText('일시정지', canvas.width / 2, canvas.height / 2);
+  ctx.font = '16px sans-serif';
+  ctx.fillText('P 키 또는 화면 탭으로 계속', canvas.width / 2, canvas.height / 2 + 36);
+}
 
 // ===== 6단계: 블록 고정 + 줄 삭제 =====
 let score = 0;
@@ -530,6 +561,8 @@ function restart() {
   updateInfo();
   dropTimer = 0;
   gameOver = false;
+  paused = false;
+  pauseBtn.textContent = '⏸ 일시정지';
   nextPiece = createPiece();
   spawnPiece();
 }
@@ -543,7 +576,7 @@ function gameLoop(time) {
   const delta = time - lastTime; // 지난 프레임부터 흐른 시간(ms)
   lastTime = time;
 
-  if (!gameOver && !inMenu) {
+  if (!gameOver && !inMenu && !paused) {
     dropTimer += delta;
     if (dropTimer >= getDropInterval()) {
       drop();
@@ -553,6 +586,7 @@ function gameLoop(time) {
 
   draw();
   if (gameOver) drawGameOver();
+  else if (paused) drawPaused();
   requestAnimationFrame(gameLoop); // 다음 프레임 예약
 }
 

@@ -21,6 +21,10 @@
     #info p { margin: 0 0 16px; }
     #info .label { color: #aaa; font-size: 14px; display: block; }
     #next { width: 120px; height: 120px; }
+    #pause {
+      width: 120px; height: 40px; font-size: 15px; color: #fff; cursor: pointer;
+      background: #2a2a2a; border: 1px solid #555; border-radius: 10px;
+    }
     #keys { color: #aaa; font-size: 13px; line-height: 1.7; }
 
     /* 시작 화면 */
@@ -68,6 +72,7 @@
       #info p { margin-bottom: 10px; }
       #next { width: 72px; height: 72px; }
       #volume { width: 72px; }
+      #pause { width: 80px; font-size: 13px; }
     }
   </style>
 </head>
@@ -90,6 +95,7 @@
       <p><span class="label" id="best-label">최고 점수</span><span id="best">0</span></p>
       <p><span class="label">레벨</span><span id="level">1</span></p>
       <p><span class="label">줄</span><span id="lines">0</span></p>
+      <p><button id="pause">⏸ 일시정지</button></p>
       <p>
         <span class="label">볼륨 <span id="volume-label">70</span></span>
         <input type="range" id="volume" min="0" max="100" value="70">
@@ -99,7 +105,8 @@
         ↑ 회전<br>
         ↓ 한 칸 내리기<br>
         Space 하드 드롭<br>
-        M 소리 켜기/끄기
+        M 소리 켜기/끄기<br>
+        P 일시정지
       </div>
     </div>
   </div>
@@ -110,7 +117,7 @@
     <button data-action="down">▼</button>
     <button data-action="hardDrop">⤓</button>
   </div>
-  <script src="tetris.js?v=12"></script>
-  <script type="module" src="ranking.js?v=12"></script>
+  <script src="tetris.js?v=13"></script>
+  <script type="module" src="ranking.js?v=13"></script>
 </body>
 </html>
