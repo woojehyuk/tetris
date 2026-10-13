@@ -69,23 +69,47 @@
     #ranking .row { display: flex; justify-content: space-between; padding: 3px 8px; border-bottom: 1px solid #333; }
 
     /* 터치 버튼 */
-    #controls { display: none; gap: 8px; margin-top: 12px; width: 100%; max-width: 420px; padding: 0 12px; }
+    /* 배치:  [◀][↻][▶] [  ]
+               [   ▼   ] [⤓ ]   (⤓는 두 줄 높이) */
+    #controls {
+      display: none; gap: 8px; margin-top: 12px; width: 100%; max-width: 420px; padding: 0 12px;
+      grid-template-columns: 1fr 1fr 1fr 1.1fr;
+      grid-template-rows: 54px 54px;
+      grid-template-areas:
+        "left rotate right drop"
+        "down down   down  drop";
+    }
     #controls button {
-      flex: 1; height: 64px; font-size: 26px; color: #fff;
+      font-size: 26px; color: #fff;
       background: #2a2a2a; border: 1px solid #555; border-radius: 12px;
       touch-action: none;
     }
     #controls button:active { background: #444; }
+    #controls [data-action="left"]     { grid-area: left; }
+    #controls [data-action="rotate"]   { grid-area: rotate; }
+    #controls [data-action="right"]    { grid-area: right; }
+    #controls [data-action="down"]     { grid-area: down; }
+    #controls [data-action="hardDrop"] { grid-area: drop; font-size: 34px; background: #3a2a40; border-color: #7a5a8a; }
+    #controls [data-action="hardDrop"]:active { background: #5a3a60; }
 
     /* 터치 기기(손가락 입력)에서만: 버튼 표시, 패널을 작게 */
     @media (pointer: coarse) {
-      #controls { display: flex; }
+      #controls { display: grid; }
+      #board { height: min(600px, 60vh); } /* 버튼이 두 줄이 된 만큼 보드를 조금 작게 */
       #keys { display: none; }
       #info { font-size: 16px; margin-left: 10px; }
       #info p { margin-bottom: 10px; }
       #next { width: 72px; height: 72px; }
       #volume { width: 72px; }
-      #pause, #music { width: 80px; font-size: 13px; }
+      #pause, #music { width: 80px; height: 34px; font-size: 12px; white-space: nowrap; padding: 0; }
+    }
+    /* 키가 작은 휴대폰: 오른쪽 패널을 더 촘촘하게 */
+    @media (pointer: coarse) and (max-height: 700px) {
+      #info { font-size: 14px; }
+      #info p { margin-bottom: 6px; }
+      #info .label { font-size: 12px; }
+      #next { width: 60px; height: 60px; }
+      #controls { grid-template-rows: 50px 50px; }
     }
   </style>
 </head>
@@ -128,13 +152,13 @@
   </div>
   <div id="controls">
     <button data-action="left">◀</button>
-    <button data-action="right">▶</button>
     <button data-action="rotate">↻</button>
+    <button data-action="right">▶</button>
     <button data-action="down">▼</button>
     <button data-action="hardDrop">⤓</button>
   </div>
-  <script src="music.js?v=15"></script>
-  <script src="tetris.js?v=15"></script>
-  <script type="module" src="ranking.js?v=15"></script>
+  <script src="music.js?v=16"></script>
+  <script src="tetris.js?v=16"></script>
+  <script type="module" src="ranking.js?v=16"></script>
 </body>
 </html>
