@@ -157,7 +157,8 @@ const KEY_ACTIONS = { ArrowLeft: 'left', ArrowRight: 'right', ArrowDown: 'down',
 
 document.addEventListener('keydown', (e) => {
   initAudio(); // 브라우저 정책상 사용자 입력이 있어야 소리를 켤 수 있음
-  if (e.key === 'm' || e.key === 'M') { muted = !muted; return; }
+  if (e.key === 'm' || e.key === 'M') { muted = !muted; updateMusic(); return; }
+  if (e.key === 'b' || e.key === 'B') { toggleMusic(); return; }
   if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { togglePause(); return; }
   if (e.key === 'Enter') {
     if (gameOver) showMenu();
@@ -216,6 +217,7 @@ function togglePause() {
   paused = !paused;
   pauseBtn.textContent = paused ? '▶ 계속' : '⏸ 일시정지';
   pauseBtn.blur(); // 포커스가 남아 Space가 버튼을 누르지 않게
+  updateMusic();
 }
 
 pauseBtn.addEventListener('click', togglePause);
@@ -276,7 +278,7 @@ function drop() {
   level = Math.floor(lines / 10) + 1;    // 10줄마다 레벨 업
   updateInfo();
 
-  if (level > prevLevel) sfx.levelUp();
+  if (level > prevLevel) { sfx.levelUp(); BGM.setTempo(getMusicTempo()); }
   else if (cleared > 0) sfx.clear(cleared);
   else sfx.lock();
   spawnPiece();
@@ -317,6 +319,7 @@ function spawnPiece() {
   if (collides(piece, 0, 0)) {  // 나오자마자 겹치면 게임 오버
     gameOver = true;
     sfx.gameOver();
+    updateMusic();
     checkBestScore();
   }
 }
@@ -365,7 +368,37 @@ function initAudio() {
   masterGain = audioCtx.createGain();
   masterGain.gain.value = getMasterVolume();
   masterGain.connect(audioCtx.destination);
+  BGM.init(audioCtx, masterGain); // 배경음악도 전체 볼륨을 거치게
+  BGM.setVolume(0.25);            // 효과음이 묻히지 않도록 음악은 작게
+  updateMusic();
 }
+
+// ===== 추가 기능 11: 배경음악 (music.js) =====
+const musicBtn = document.getElementById('music');
+let musicOn = true;
+try { musicOn = localStorage.getItem('tetris-music') !== 'off'; } catch {}
+
+// 레벨 1: 120 BPM, 레벨마다 8씩 빨라짐 (최대 180)
+function getMusicTempo() {
+  return Math.min(180, 120 + (level - 1) * 8);
+}
+
+// 지금 상태에 맞게 음악을 켜거나 끔 (게임 중일 때만 재생)
+function updateMusic() {
+  const shouldPlay = audioCtx && musicOn && !muted && !inMenu && !gameOver && !paused;
+  if (shouldPlay && !BGM.playing) BGM.start();
+  else if (!shouldPlay && BGM.playing) BGM.stop();
+  musicBtn.textContent = musicOn ? '🎵 음악 ON' : '🔇 음악 OFF';
+}
+
+function toggleMusic() {
+  musicOn = !musicOn;
+  try { localStorage.setItem('tetris-music', musicOn ? 'on' : 'off'); } catch {}
+  musicBtn.blur();
+  updateMusic();
+}
+
+musicBtn.addEventListener('click', () => { initAudio(); toggleMusic(); });
 
 volumeSlider.addEventListener('input', () => {
   volumeLabel.textContent = volumeSlider.value;
@@ -536,6 +569,7 @@ function showMenu() {
   inMenu = true;
   renderPlayers();
   menuEl.hidden = false;
+  updateMusic();
 }
 
 function startGame() {
@@ -565,6 +599,8 @@ function restart() {
   pauseBtn.textContent = '⏸ 일시정지';
   nextPiece = createPiece();
   spawnPiece();
+  BGM.setTempo(getMusicTempo());
+  updateMusic();
 }
 
 // ===== 5단계: 자동 낙하 (게임 루프) =====

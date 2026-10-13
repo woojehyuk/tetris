@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>배경음악 미리듣기</title>
+  <style>
+    body {
+      background: #111; color: #fff; font-family: sans-serif; margin: 0; padding: 24px 16px;
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    h1 { font-size: 24px; margin: 0; }
+    p { color: #aaa; margin: 0; text-align: center; line-height: 1.6; }
+    #play {
+      width: 200px; height: 64px; font-size: 22px; font-weight: bold; color: #fff;
+      background: #00c060; border: none; border-radius: 14px; cursor: pointer;
+    }
+    #play.on { background: #c03040; }
+    label { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 260px; }
+    input[type=range] { width: 100%; }
+    #chord { font-size: 32px; font-weight: bold; color: #f0d000; min-height: 40px; }
+  </style>
+</head>
+<body>
+  <h1>🎵 배경음악 미리듣기</h1>
+  <p>붕붕팍 붕붕팍 + 화음 Am → F → G → E<br>(긴장감 있는 단조, 4마디 반복)</p>
+  <button id="play">▶ 재생</button>
+  <div id="chord"></div>
+  <label>빠르기: <span id="bpm-label">120</span> BPM (보통)
+    <input type="range" id="bpm" min="80" max="180" value="120">
+  </label>
+  <label>음량: <span id="vol-label">50</span>
+    <input type="range" id="vol" min="0" max="100" value="50">
+  </label>
+  <p>빠르기를 올려보면 레벨이 올라갈 때 어떤 느낌일지 들어볼 수 있어요.</p>
+
+  <script src="music.js"></script>
+  <script>
+    let audioCtx = null;
+    const playBtn = document.getElementById('play');
+    const bpm = document.getElementById('bpm');
+    const vol = document.getElementById('vol');
+    const chordEl = document.getElementById('chord');
+    const NAMES = ['Am', 'F', 'G', 'E'];
+    let chordTimer = null;
+
+    playBtn.addEventListener('click', () => {
+      if (!audioCtx) {
+        audioCtx = new AudioContext();
+        BGM.init(audioCtx, audioCtx.destination);
+        BGM.setVolume(vol.value / 100);
+      }
+      if (BGM.playing) {
+        BGM.stop();
+        clearInterval(chordTimer);
+        chordEl.textContent = '';
+        playBtn.textContent = '▶ 재생';
+        playBtn.classList.remove('on');
+      } else {
+        BGM.start();
+        // 지금 연주 중인 화음 표시 (한 마디 = 4박)
+        const startAt = performance.now();
+        chordTimer = setInterval(() => {
+          const bars = (performance.now() - startAt) / 1000 / (60 / bpm.value * 4);
+          chordEl.textContent = NAMES[Math.floor(bars) % 4];
+        }, 50);
+        playBtn.textContent = '■ 정지';
+        playBtn.classList.add('on');
+      }
+    });
+
+    bpm.addEventListener('input', () => {
+      document.getElementById('bpm-label').textContent = bpm.value;
+      BGM.setTempo(Number(bpm.value));
+    });
+    vol.addEventListener('input', () => {
+      document.getElementById('vol-label').textContent = vol.value;
+      BGM.setVolume(vol.value / 100);
+    });
+  </script>
+</body>
+</html>
